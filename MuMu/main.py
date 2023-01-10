@@ -14,16 +14,18 @@ video = cv2.VideoCapture("test.mp4")
 def extract_frames(frames):
     frames=[]
     i=0
-    while(1):
-        ret,frame=video.read()
-        if ret:
-            frame=cv2.resize(frame,dsize=(600,400))
-            frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
-            frames.append(frame)
-   
-
+    # while(1):
+    #     ret,frame=video.read()
+    #     if ret:
+    #         frame=cv2.resize(frame,dsize=(600,400))
+    #         frame=cv2.cvtColor(frame,cv2.COLOR_BGR2RGB)
+    #         frames.append(frame)
+    
+out = cv2.VideoWriter('project.avi',cv2.VideoWriter_fourcc(*'DIVX'), 15, ( 848,480))
 while True:
     status, frame = video.read()
+    if status==False:
+        break
     gray = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
     gray = cv2.GaussianBlur(gray,(21,21), 0)
 
@@ -31,10 +33,11 @@ while True:
 
     thresh = cv2.threshold(diff, 30, 255, cv2.THRESH_BINARY)[1]
     thresh = cv2.dilate(thresh, None, iterations = 2)
-    
+    print(frame.shape)
     #Setting up contours to appear when movement is detected
     cnts, res = cv2.findContours(thresh.copy(),
         cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    frames=[]
     
     #Initialising contour sensitivity and specifics
     for contour in cnts:
@@ -42,14 +45,12 @@ while True:
             continue
         (x, y, w, h) = cv2.boundingRect(contour)
         cv2.rectangle(frame, (x,y), (x+w, y+h), (0, 255, 0), 3)
-        
+        # videow.write(frame)
         #This extract frames function now removes all frames of the video that contains the contours.
         #If you comment the function below out you can see the full video
-        extract_frames(frame)
-        #How do I use the extracted frames and append them into a clip?
-  
+        out.write(frame)
     cv2.imshow("All Countours", frame)
-
+    
     #cv2.imshow("Threshold Video", thresh)
 
     #cv2.imshow("Diff Video", diff)
@@ -57,6 +58,6 @@ while True:
     key = cv2.waitKey(1)
     if key == ord('q'):
         break
-
 video.release()
-cv2.destroyWindows()   
+out.release()
+cv2.destroyAllWindows()   
